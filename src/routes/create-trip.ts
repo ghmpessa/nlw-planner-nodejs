@@ -2,15 +2,9 @@ import { prisma } from '../lib/prisma'
 import { FastifyInstance } from 'fastify'
 import { ZodTypeProvider } from 'fastify-type-provider-zod'
 
-import dayjs from 'dayjs'
-import localizedFormat from 'dayjs/plugin/localizedFormat'
-import 'dayjs/locale/pt-br'
-
 import { z } from 'zod'
 import { getMailClient } from '../lib/mail'
-
-dayjs.locale('pt-br')
-dayjs.extend(localizedFormat)
+import { dayjs } from '../lib/dayjs'
 
 export async function createTrip(app: FastifyInstance) {
   app.withTypeProvider<ZodTypeProvider>().post('/trips', {
@@ -25,7 +19,7 @@ export async function createTrip(app: FastifyInstance) {
       })
     }
   }, async (req, res) => {
-    const { 
+    const {
       destination,
       starts_at,
       ends_at,
@@ -34,11 +28,11 @@ export async function createTrip(app: FastifyInstance) {
       emails_to_invite
     } = req.body
 
-    if(dayjs(starts_at).isBefore(new Date())) {
+    if (dayjs(starts_at).isBefore(new Date())) {
       throw new Error('Invalid trip start date.')
     }
 
-    if(dayjs(ends_at).isBefore(starts_at)) {
+    if (dayjs(ends_at).isBefore(starts_at)) {
       throw new Error('Invalid trip end date.')
     }
 
@@ -70,7 +64,7 @@ export async function createTrip(app: FastifyInstance) {
 
     const mail = await getMailClient()
 
-    const message = await mail.sendMail({
+    await mail.sendMail({
       from: {
         name: 'Equipe plann.er',
         address: 'contato@plann.er'
