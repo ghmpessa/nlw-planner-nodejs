@@ -6,11 +6,10 @@ import { prisma } from '../lib/prisma'
 
 import z from 'zod'
 import { ClientError } from '../errors/client-error'
-import { env } from '../env'
 
-export async function confirmParticipant(app: FastifyInstance) {
+export async function getParticipant(app: FastifyInstance) {
   app.withTypeProvider<ZodTypeProvider>().get(
-    '/participants/:participantId/confirm',
+    '/participants/:participantId',
     {
       schema: {
         params: z.object({
@@ -25,17 +24,19 @@ export async function confirmParticipant(app: FastifyInstance) {
       const participant = await prisma.participant.findUnique({
         where: {
           id: participantId
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          is_confirmed: true,
         }
       })
 
       if (!participant) {
-        throw new ClientError('Participant not found')
+        throw new ClientError('participant not found')
       }
 
-      if (participant.is_confirmed) {
-        return res.redirect(`${env.WEB_BASE_URL}/trips/${participant.trip_id}`)
-      }
-
-      return res.redirect(`${env.WEB_BASE_URL}/trips/${participant.trip_id}`)
+      return res.status(200).send({ participant })
     })
 }
